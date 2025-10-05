@@ -26,6 +26,11 @@ class MainActivity : AppCompatActivity() {
         btnCamera.setOnClickListener {
             startActivity(Intent(this, GaleriaCamaraActivity::class.java))
         }
-        // btnMap.setOnClickListener { ... }
+
+        btnMap.setOnClickListener {
+            val intent = Intent(this,  MapaActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 }
