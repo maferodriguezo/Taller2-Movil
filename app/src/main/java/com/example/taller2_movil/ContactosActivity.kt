@@ -10,6 +10,9 @@ import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import org.json.JSONArray
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class ContactosActivity : AppCompatActivity() {
 
@@ -33,7 +36,8 @@ class ContactosActivity : AppCompatActivity() {
                 REQUEST_CONTACTS
             )
         } else {
-            cargarContactos()
+            // Carga los contactos desde el JSON
+            cargarContactosDesdeJson()
         }
     }
 
@@ -46,26 +50,32 @@ class ContactosActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CONTACTS &&
             grantResults.isNotEmpty() &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            cargarContactos()
+            cargarContactosDesdeJson()
         }
     }
 
-    private fun cargarContactos() {
+    // Lee los contactos del archivo JSON
+    private fun cargarContactosDesdeJson() {
         val contactos = mutableListOf<String>()
-        val cursor: Cursor? = contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            null, null, null, null
-        )
 
-        cursor?.use {
-            val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-            while (it.moveToNext()) {
-                val nombre = it.getString(nameIndex)
-                contactos.add(nombre)
+        try {
+            val inputStream = assets.open("contactos.json")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val jsonText = reader.use { it.readText() }
+            val jsonArray = JSONArray(jsonText)
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val id = obj.getInt("id")
+                val nombre = obj.getString("nombre")
+                contactos.add("$id    $nombre")
             }
-        }
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, contactos)
-        listaContactos.adapter = adapter
+            val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, contactos)
+            listaContactos.adapter = adapter
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
